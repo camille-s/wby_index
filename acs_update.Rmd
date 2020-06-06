@@ -1,0 +1,347 @@
+---
+title: "data for draft"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(camiller)
+library(blscrapeR)
+```
+
+```{r}
+xl_path <- "input/waterbury profile data for design.xlsx"
+towns <- readxl::read_excel(xl_path, sheet = 1, skip = 1) %>% pull(1)
+# xwalk <- read_csv("../reference/ct_xwalk.csv")
+data("acs_vars")
+regionals <- c("06", 12, 14, 15, 16) %>% paste("Regional ", .)
+
+
+year <- 2016
+```
+
+```{r}
+read_csv("../reference/ct_xwalk.csv") %>%
+  select(town = ctycsubname, county = ctyname) %>%
+  unique() %>%
+  mutate(town = str_remove(town, " town .+$")) %>%
+  filter(town %in% towns) %>% 
+  count(county)
+```
+
+
+```{r}
+nums <- list(
+  total_pop = "B01003",
+  race = "B03002",
+  immigration = "B05005",
+  poverty = "C17002",
+  pov_age = "B17024",
+  tenure = "B25003",
+  hh_type = "B11001",
+  fam_kids = "B11003",
+  mortgage = "B25091",
+  rent = "B25074",
+  prek = "B14003",
+  education = "B15003",
+  sex_age = "B01001",
+  sex_age_white = "B01001H",
+  language = "B06007"
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+fetch <- nums %>%
+  map(function(num) {
+    lfield <- get_acs(geography = "county subdivision", table = num, year = year, state = "09", county = "05")
+    nhv <- get_acs(geography = "county subdivision", table = num, year = year, state = "09", county = "09")
+    df <- bind_rows(lfield, nhv) %>%
+      town_names(NAME) %>%
+      filter(NAME %in% towns) %>%
+      left_join(acs_vars %>% select(-concept), by = c("variable" = "name")) %>%
+      select(town = NAME, variable, label, estimate)
+    bind_rows(df, df %>% mutate(town = "Greater Waterbury")) %>%
+      group_by(town, variable, label) %>%
+      summarise(estimate = sum(estimate)) %>%
+      ungroup()
+  })
+  
+saveRDS(fetch, "acs_fetch.rds")
+```
+
+```{r}
+fetch <- readRDS("acs_fetch.rds") %>% 
+  map(~mutate(., level = as.factor(town) %>% 
+                fct_other(keep = c("Waterbury", "Greater Waterbury"), other_level = "Suburbs")))
+table <- vector(mode = "list", length = length(fetch)) %>% setNames(names(fetch))
+```
+
+# ACS stuff
+
+```{r}
+table$total_pop <- fetch$total_pop %>%
+  mutate(group = "total_population") %>%
+  group_by(level, group) %>%
+  summarise(estimate = sum(estimate))
+```
+
+```{r}
+table$race <- fetch$race %>%
+  separate(label, into = c("total", "latino", "race", "two"), sep = "!!") %>%
+  mutate(group = case_when(
+    latino == "Hispanic or Latino" & is.na(race) ~ "latino",
+    latino == "Not Hispanic or Latino" & race == "Black or African American alone" ~ "black",
+    latino == "Not Hispanic or Latino" & race == "White alone" ~ "white",
+    is.na(latino) ~ "total"
+  )) %>%
+  filter(!is.na(group)) %>%
+  select(-total:-two) %>% 
+  group_by(level) %>%
+  add_grps(list(total = 1, white = 2, black_latino = 3:4), group) %>%
+  calc_shares(level, group = group, denom = "total")
+```
+
+```{r}
+table$immigration <- fetch$immigration %>%
+  separate(label, into = c("total", "date", "nativity", "group"), sep = "!!", fill = "left") %>%
+  group_by(level) %>%
+  add_grps(list(foreign_born = 4), group) %>%
+  bind_rows(table$total_pop) %>%
+  calc_shares(level, group = group, denom = "total_population")
+```
+
+```{r}
+table$poverty <- fetch$poverty %>%
+  group_by(level) %>%
+  add_grps(list(determined = 1, poverty = 2:3, low_income = 2:7), label) %>%
+  calc_shares(level, group = label, denom = "determined") %>%
+  rename(group = label)
+```
+
+```{r}
+table$pov_age <- fetch$pov_age %>%
+  separate(label, into = c("total", "age", "ratio"), sep = "!!") %>% 
+  filter(!is.na(age)) %>% 
+  replace_na(list(ratio = "determined")) %>% 
+  mutate_at(vars(age, ratio), function(x) as.factor(x) %>% fct_inorder()) %>%
+  group_by(level, ratio) %>%
+  add_grps(list(kids = 1:3, seniors = 9:10), group = age) %>%
+  group_by(level, age) %>%
+  add_grps(list(determined = 1, poverty = 2:4, low_income = 2:9), group = ratio) %>%
+  calc_shares(level, age, group = ratio, denom = "determined") %>%
+  rename(group = age, group2 = ratio)
+
+# table$pov_age %>% unite("group", age, ratio, sep = "_")
+```
+
+```{r}
+table$tenure <- fetch$tenure %>%
+  separate(label, into = c("total", "group"), sep = "!!", fill = "left") %>%
+  group_by(level) %>%
+  add_grps(list(total_hh = 1, owned = 2), group) %>%
+  calc_shares(level, group = group, denom = "total_hh")
+```
+
+```{r}
+table$hh_type <- fetch$hh_type %>%
+  separate(label, into = c("total", "family", "family_type", "group"), sep = "!!", fill = "left") %>%
+  group_by(level) %>%
+  add_grps(list(total_hh = 1, living_alone = 8), group = group) %>%
+  calc_shares(level, group = group, denom = "total_hh")
+```
+
+```{r}
+table$fam_kids <- fetch$fam_kids %>% 
+  group_by(level) %>%
+  add_grps(list(total_family_hh = 1, married_w_kids = 3, single_parent = c(10, 16)), label) %>%
+  rename(group = label) %>%
+  bind_rows(table$hh_type %>% filter(group == "total_hh") %>% select(-share)) %>%
+  calc_shares(level, group = group, denom = "total_hh")
+```
+
+```{r}
+table$mortgage <- fetch$mortgage %>%
+  separate(label, into = c("total", "mortgage", "burden"), sep = "!!") %>%
+  replace_na(list(mortgage = "total_owned")) %>%
+  filter(!is.na(burden) | mortgage == "total_owned") %>%
+  replace_na(list(burden = "total_owned")) %>% 
+  group_by(level) %>%
+  add_grps(list(total_owned = 1, burden = 7:10, severe = 10), burden) %>%
+  calc_shares(level, group = burden, denom = "total_owned") %>%
+  rename(group = burden)
+```
+
+```{r}
+table$rent <- fetch$rent %>%
+  separate(label, into = c("total", "income", "burden"), sep = "!!") %>%
+  replace_na(list(income = "total_rented")) %>%
+  filter(!is.na(burden) | income == "total_rented") %>%
+  replace_na(list(burden = "total_rented")) %>% 
+  group_by(level) %>%
+  add_grps(list(total_rented = 1, burden = 5:8, severe = 8), burden) %>%
+  calc_shares(level, group = burden, denom = "total_rented") %>%
+  rename(group = burden)
+```
+
+```{r}
+table$cost_burden <- bind_rows(
+  table$mortgage %>% mutate(tenure = "owned"),
+  table$rent %>% mutate(tenure = "rented")
+) %>%
+  select(-share) %>%
+  group_by(level) %>% 
+  arrange(group) %>%
+  add_grps(list(total_hh = 3:4, burden = 1, severe = 2), group) %>%
+  calc_shares(level, group = group, denom = "total_hh")
+```
+
+```{r}
+table$prek <- fetch$prek %>%
+  separate(label, into = c("total", "sex", "type", "age"), sep = "!!") %>%
+  filter(age == "3 and 4 years") %>%
+  group_by(level) %>%
+  add_grps(list(enrolled = 1:2, not_enrolled = 3), group = type) %>%
+  spread(key = type, value = estimate) %>%
+  mutate(total_3_4 = enrolled + not_enrolled) %>%
+  gather(key = enrollment, value = estimate, -level) %>%
+  calc_shares(level, group = enrollment, denom = "total_3_4") %>%
+  rename(group = enrollment)
+```
+
+```{r}
+table$education <- fetch$education %>%
+  separate(label, into = c("total", "edu"), sep = "!!", fill = "left") %>%
+  select(-total) %>% 
+  group_by(level) %>%
+  add_grps(list(ages25plus = 1, less_than_hs = 2:16, bach_plus = 22:25), edu) %>%
+  calc_shares(level, group = edu, denom = "ages25plus") %>%
+  rename(group = edu)
+```
+
+```{r}
+table$race_age <- bind_rows(
+  fetch$sex_age %>% mutate(race = "all"),
+  fetch$sex_age_white %>% mutate(race = "white")
+) %>%
+  separate(label, into = c("total", "sex", "age"), sep = "!!") %>%
+  filter(!(is.na(age) & !is.na(sex))) %>%
+  replace_na(list(age = "total_pop")) %>%
+  group_by(level, race) %>%
+  add_grps(list(total_pop = 1, under18 = 2:5), age) %>%
+  ungroup() %>%
+  calc_shares(level, age, group = race, denom = "all") %>%
+  rename(group = age, group2 = race)
+```
+
+```{r}
+table$language <- fetch$language %>%
+  filter(!str_detect(label, "(B|b)orn")) %>%
+  separate(label, into = c("total", "language", "profic"), sep = "!!", fill = "left") %>% 
+  group_by(level) %>%
+  add_grps(list(age5plus = 1, low_english = 5), profic) %>%
+  calc_shares(level, group = profic, denom = "age5plus") %>%
+  rename(group = profic)
+```
+
+
+```{r}
+bls_nums <- tibble(name = c("Waterbury", "Waterbury Metro"), series = c("LAUCT098000000000003", "LAUMT097870000000003"))
+
+unemp <- bind_rows(
+  bls_api(bls_nums$series, startyear = 2005, endyear = 2009, annualaverage = T, registrationKey = Sys.getenv("BLS_KEY")),
+  bls_api(bls_nums$series, startyear = 2010, endyear = 2017, annualaverage = T, registrationKey = Sys.getenv("BLS_KEY"))
+) %>%
+  left_join(bls_nums, by = c("seriesID" = "series")) %>%
+  select(name, year, month = periodName, value) %>%
+  mutate(value = value / 100)
+```
+
+```{r}
+unemp %>% filter(year == max(year), month == "Annual")
+```
+
+```{r}
+unemp %>%
+  filter(month != "Annual") %>%
+  mutate(date = paste(month, "1", year) %>% lubridate::mdy()) %>%
+  ggplot(aes(x = date, y = value, color = name)) + geom_line() + geom_smooth(se = F)
+```
+
+
+```{r}
+school_enroll <- read_csv("http://data.ctdata.org/dataset/0f89b12d-90b7-43bc-ae32-2d58712056ae/resource/cee31a44-4ae0-4020-b734-0ef3c409ec5d/download/studentenrollmentallstudents2008-2018.csv") 
+
+school_enroll %>%
+  select(1, 3, 6) %>%
+  setNames(c("district", "year", "value")) %>%
+  mutate(district = district %>% str_remove("School District") %>% str_trim()) %>%
+  filter(value > 0) %>% 
+  filter(district %in% c(towns, regionals)) %>%
+  filter(year == "2017-2018") %>%
+  group_by(year) %>%
+  summarise(value = sum(value))
+```
+
+```{r}
+graduation <- read_csv("http://data.ctdata.org/dataset/5cef208b-b761-4d03-bf86-b8dd68d9855e/resource/234ffefe-ca9e-443e-875e-bd252969b2c0/download/fouryeargradrateallstudents2011-2017.csv")
+
+graduation %>%
+  select(-FIPS) %>%
+  setNames(c("district", "year", "variable", "measure", "value")) %>%
+  filter(year == max(year), variable %in% c("Total Cohort Count", "Four Year Graduation Count")) %>%
+  mutate(district = district %>% str_remove("School District") %>% str_trim()) %>%
+  filter(value > 0) %>% 
+  filter(district %in% c(towns, regionals)) %>%
+  mutate(variable = as.factor(variable) %>% fct_recode(total = "Total Cohort Count", grads = "Four Year Graduation Count")) %>%
+  select(-measure) %>%
+  group_by(year, variable, district) %>%
+  summarise(value = sum(value, na.rm = T)) %>%
+  spread(key = variable, value = value) %>%
+  mutate(rate = grads / total)
+```
+
+
+# all tables bound
+
+```{r}
+prof_df <- table %>%
+  compact() %>%
+  imap_dfr(function(tbl, name) tbl %>% mutate(indicator = name)) %>%
+  select(indicator, level, group, group2, estimate, share)
+
+write_csv(prof_df, "region_profile_acs.csv")
+```
+
+
+
+```{r}
+vehicles <- get_acs(geography = "county subdivision", table = "B25044", year = 2016, state = "09") %>%
+  town_names(NAME) %>%
+  rename(name = NAME) %>%
+  filter(name %in% towns) %>%
+  left_join(acs_vars %>% select(-concept), by = c("variable" = "name")) %>%
+  separate(label, into = c("total", "tenure", "cars"), sep = "!!") %>%
+  filter(!(is.na(cars) & !is.na(tenure))) %>%
+  replace_na(list(cars = "total"))
+  
+```
+
+```{r}
+bind_rows(vehicles, vehicles %>% mutate(name = "Greater Waterbury")) %>%
+  mutate(cars = as.factor(cars) %>% fct_inorder()) %>%
+  group_by(name, cars) %>%
+  summarise(estimate = sum(estimate)) %>%
+  ungroup() %>%
+  filter(name %in% c("Waterbury", "Greater Waterbury"), cars %in% c("total", "No vehicle available")) %>%
+  calc_shares(name, group = cars, denom = "total")
+```
+

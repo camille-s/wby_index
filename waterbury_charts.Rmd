@@ -258,6 +258,20 @@ student_race <- read_csv("http://data.ctdata.org/dataset/9572f54c-b1c3-4153-8ead
 
 ```
 
+```{r}
+read_csv("http://data.ctdata.org/dataset/9572f54c-b1c3-4153-8ead-e5b16e678d90/resource/bf57c924-c677-44af-853c-63615f22c2bc/download/studentenrollmentbyraceethnicity2011-2018.csv") %>%
+  filter(Year == "2017-2018", `Measure Type` == "Number") %>%
+  select(district = District, race = `Race/Ethnicity`, value = Value) %>%
+  mutate(district = district %>% str_remove("School District") %>% str_trim()) %>%
+  filter(value > 0) %>% 
+  filter(district %in% c(towns, regionals)) %>% 
+  mutate(race = as.factor(race) %>% fct_recode(Black = "Black or African American", Latino = "Hispanic/Latino of any race") %>% fct_other(keep = c("White", "Black", "Latino", "Asian"), other_level = "Other race")) %>%
+  group_by(district == "Waterbury", race == "White") %>%
+  summarise(value = sum(value)) %>%
+  mutate(share = value / sum(value))
+```
+
+
 ```{r fig.height=3, fig.width=3}
 sr_vec <- student_race$value
 names(sr_vec) <- student_race$race
@@ -276,7 +290,7 @@ student_race_plot
 ```{r fig.height=2, fig.width=4}
 wrap20 <- scales::wrap_format(15)
 
-student_need <- read_csv("http://data.ctdata.org/dataset/8cad880f-4db0-4201-afa2-60a471fbc2fd/resource/ffec92b1-6412-40fa-9b05-81daa17ea69a/download/educationalneed2016-2017.csv") %>%
+student_need <- read_csv("http://data.ctdata.org/dataset/8cad880f-4db0-4201-afa2-60a471fbc2fd/resource/c192e9ac-ef4d-41d4-9367-68fd890f4f16/download/educationalneed2017-2018.csv") %>%
   filter(Year == "2016-2017", `Measure Type` == "Number") %>%
   select(district = District, need = `Indicator of Educational Need`, value = Value) %>%
   mutate(district = district %>% str_remove("School District") %>% str_trim()) %>%
@@ -638,6 +652,11 @@ dental_bars <- sheets$dental_cws %>%
 ```
 
 ```{r}
+sheets$dental_cws
+```
+
+
+```{r}
 # cowplot::plot_grid(dental_bars + ggtitle(NULL), dental_map, nrow = 1, rel_widths = c(1, 0.8))
 ```
 
@@ -710,11 +729,14 @@ race_trct <- structure(str_pad(x, width = 3, side = "left", pad = "0") %>% sprin
 
 ```{r fig.height=3.5, fig.width=4}
 race_map <- race_trct %>%
-  calc_shares(tract, group = race, denom = "total") %>%
+  group_by(tract) %>%
+  calc_shares(group = race, denom = "total") %>%
+  # calc_shares(tract, group = race, denom = "total") %>%
+  ungroup() %>%
   filter(race == "white") %>%
   mutate(nonwhite = round(1 - share, digits = 2)) %>%
   select(tract, nonwhite) %>%
-  mutate(brk = classInt::classIntervals(nonwhite, n = 7, style = "jenks")$brk %>% cut(nonwhite, breaks = ., include.lowest = T)) %>%
+  mutate(brk = classInt::classIntervals(nonwhite, n = 7, style = "jenks")$brk %>% unique() %>% cut(nonwhite, breaks = ., include.lowest = T)) %>%
   mutate(brk = fct_relabel(brk, function(x) brk_labels(x, "percent", mult_by = 100))) %>%
   full_join(reg_tract_sf, by = "tract") %>%
   ggplot() +
@@ -740,13 +762,12 @@ race_map
 
 
 
-
 ```{r}
 ls()
 ls(pattern = "_(map|plot)$")
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 list(
     proj_plot = list(h = 2.7, w = 7),
     race_age_plot = list(h = 4, w = 5),

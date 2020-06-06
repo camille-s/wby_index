@@ -1,0 +1,133 @@
+indicator,level,group,group2,estimate,share
+total_pop,Greater Waterbury,total_population,NA,335773,NA
+total_pop,Waterbury,total_population,NA,109211,NA
+total_pop,Suburbs,total_population,NA,226562,NA
+race,Greater Waterbury,total,NA,335773,NA
+race,Greater Waterbury,black_latino,NA,78562,0.234
+race,Greater Waterbury,white,NA,241070,0.718
+race,Waterbury,total,NA,109211,NA
+race,Waterbury,black_latino,NA,59913,0.549
+race,Waterbury,white,NA,43056,0.394
+race,Suburbs,total,NA,226562,NA
+race,Suburbs,black_latino,NA,18649,0.082
+race,Suburbs,white,NA,198014,0.874
+immigration,Greater Waterbury,total_population,NA,335773,NA
+immigration,Greater Waterbury,foreign_born,NA,36779,0.11
+immigration,Waterbury,total_population,NA,109211,NA
+immigration,Waterbury,foreign_born,NA,17428,0.16
+immigration,Suburbs,total_population,NA,226562,NA
+immigration,Suburbs,foreign_born,NA,19351,0.085
+poverty,Greater Waterbury,determined,NA,329989,NA
+poverty,Greater Waterbury,low_income,NA,84772,0.257
+poverty,Greater Waterbury,poverty,NA,40151,0.122
+poverty,Waterbury,determined,NA,107447,NA
+poverty,Waterbury,low_income,NA,51861,0.483
+poverty,Waterbury,poverty,NA,27291,0.254
+poverty,Suburbs,determined,NA,222542,NA
+poverty,Suburbs,low_income,NA,32911,0.148
+poverty,Suburbs,poverty,NA,12860,0.058
+pov_age,Greater Waterbury,kids,determined,74677,NA
+pov_age,Greater Waterbury,kids,low_income,25751,0.345
+pov_age,Greater Waterbury,kids,poverty,13282,0.178
+pov_age,Greater Waterbury,seniors,determined,51988,NA
+pov_age,Greater Waterbury,seniors,low_income,13013,0.25
+pov_age,Greater Waterbury,seniors,poverty,4270,0.082
+pov_age,Waterbury,kids,determined,27827,NA
+pov_age,Waterbury,kids,low_income,18483,0.664
+pov_age,Waterbury,kids,poverty,10522,0.378
+pov_age,Waterbury,seniors,determined,12634,NA
+pov_age,Waterbury,seniors,low_income,5247,0.415
+pov_age,Waterbury,seniors,poverty,1940,0.154
+pov_age,Suburbs,kids,determined,46850,NA
+pov_age,Suburbs,kids,low_income,7268,0.155
+pov_age,Suburbs,kids,poverty,2760,0.059
+pov_age,Suburbs,seniors,determined,39354,NA
+pov_age,Suburbs,seniors,low_income,7766,0.197
+pov_age,Suburbs,seniors,poverty,2330,0.059
+tenure,Greater Waterbury,total_hh,NA,124448,NA
+tenure,Greater Waterbury,owned,NA,86294,0.693
+tenure,Waterbury,total_hh,NA,39735,NA
+tenure,Waterbury,owned,NA,17367,0.437
+tenure,Suburbs,total_hh,NA,84713,NA
+tenure,Suburbs,owned,NA,68927,0.814
+hh_type,Greater Waterbury,total_hh,NA,124448,NA
+hh_type,Greater Waterbury,living_alone,NA,33570,0.27
+hh_type,Waterbury,total_hh,NA,39735,NA
+hh_type,Waterbury,living_alone,NA,12833,0.323
+hh_type,Suburbs,total_hh,NA,84713,NA
+hh_type,Suburbs,living_alone,NA,20737,0.245
+fam_kids,Greater Waterbury,total_hh,NA,124448,NA
+fam_kids,Greater Waterbury,married_w_kids,NA,23760,0.191
+fam_kids,Greater Waterbury,single_parent,NA,11474,0.092
+fam_kids,Greater Waterbury,total_family_hh,NA,84849,0.682
+fam_kids,Waterbury,total_hh,NA,39735,NA
+fam_kids,Waterbury,married_w_kids,NA,5174,0.13
+fam_kids,Waterbury,single_parent,NA,6654,0.167
+fam_kids,Waterbury,total_family_hh,NA,24915,0.627
+fam_kids,Suburbs,total_hh,NA,84713,NA
+fam_kids,Suburbs,married_w_kids,NA,18586,0.219
+fam_kids,Suburbs,single_parent,NA,4820,0.057
+fam_kids,Suburbs,total_family_hh,NA,59934,0.707
+mortgage,Greater Waterbury,total_owned,NA,86294,NA
+mortgage,Greater Waterbury,burden,NA,26834,0.311
+mortgage,Greater Waterbury,severe,NA,10646,0.123
+mortgage,Waterbury,total_owned,NA,17367,NA
+mortgage,Waterbury,burden,NA,6887,0.397
+mortgage,Waterbury,severe,NA,2863,0.165
+mortgage,Suburbs,total_owned,NA,68927,NA
+mortgage,Suburbs,burden,NA,19947,0.289
+mortgage,Suburbs,severe,NA,7783,0.113
+rent,Greater Waterbury,total_rented,NA,38154,NA
+rent,Greater Waterbury,burden,NA,18836,0.494
+rent,Greater Waterbury,severe,NA,10167,0.266
+rent,Waterbury,total_rented,NA,22368,NA
+rent,Waterbury,burden,NA,12331,0.551
+rent,Waterbury,severe,NA,7141,0.319
+rent,Suburbs,total_rented,NA,15786,NA
+rent,Suburbs,burden,NA,6505,0.412
+rent,Suburbs,severe,NA,3026,0.192
+prek,Greater Waterbury,total_3_4,NA,7685,NA
+prek,Greater Waterbury,enrolled,NA,4648,0.605
+prek,Greater Waterbury,not_enrolled,NA,3037,0.395
+prek,Waterbury,total_3_4,NA,3397,NA
+prek,Waterbury,enrolled,NA,2004,0.59
+prek,Waterbury,not_enrolled,NA,1393,0.41
+prek,Suburbs,total_3_4,NA,4288,NA
+prek,Suburbs,enrolled,NA,2644,0.617
+prek,Suburbs,not_enrolled,NA,1644,0.383
+education,Greater Waterbury,ages25plus,NA,231699,NA
+education,Greater Waterbury,bach_plus,NA,74356,0.321
+education,Greater Waterbury,less_than_hs,NA,26140,0.113
+education,Waterbury,ages25plus,NA,69518,NA
+education,Waterbury,bach_plus,NA,10477,0.151
+education,Waterbury,less_than_hs,NA,14522,0.209
+education,Suburbs,ages25plus,NA,162181,NA
+education,Suburbs,bach_plus,NA,63879,0.394
+education,Suburbs,less_than_hs,NA,11618,0.072
+language,Greater Waterbury,age5plus,NA,317835,NA
+language,Greater Waterbury,low_english,NA,22349,0.07
+language,Waterbury,age5plus,NA,101310,NA
+language,Waterbury,low_english,NA,14341,0.142
+language,Suburbs,age5plus,NA,216525,NA
+language,Suburbs,low_english,NA,8008,0.037
+cost_burden,Greater Waterbury,total_hh,NA,124448,NA
+cost_burden,Greater Waterbury,burden,NA,45670,0.367
+cost_burden,Greater Waterbury,severe,NA,20813,0.167
+cost_burden,Waterbury,total_hh,NA,39735,NA
+cost_burden,Waterbury,burden,NA,19218,0.484
+cost_burden,Waterbury,severe,NA,10004,0.252
+cost_burden,Suburbs,total_hh,NA,84713,NA
+cost_burden,Suburbs,burden,NA,26452,0.312
+cost_burden,Suburbs,severe,NA,10809,0.128
+race_age,Greater Waterbury,total_pop,all,335773,NA
+race_age,Greater Waterbury,total_pop,white,241070,0.718
+race_age,Greater Waterbury,under18,all,75691,NA
+race_age,Greater Waterbury,under18,white,44626,0.59
+race_age,Waterbury,total_pop,all,109211,NA
+race_age,Waterbury,total_pop,white,43056,0.394
+race_age,Waterbury,under18,all,28119,NA
+race_age,Waterbury,under18,white,5953,0.212
+race_age,Suburbs,total_pop,all,226562,NA
+race_age,Suburbs,total_pop,white,198014,0.874
+race_age,Suburbs,under18,all,47572,NA
+race_age,Suburbs,under18,white,38673,0.813

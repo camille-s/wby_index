@@ -1,0 +1,38 @@
+---
+title: "Waterbury colors"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(rcartocolor)
+```
+
+[Palettes from Carto Colors](https://carto.com/carto-colors/)
+
+```{r}
+palettes <- list("Teal", "DarkMint", "BrwnYl") %>%
+  map(~carto_pal(7, .)) %>%
+  setNames(c("Teal", "DarkMint", "BrwnYl"))
+```
+
+```{r echo=FALSE, fig.height=1.5, fig.width=6}
+iwalk(palettes, function(pal, nm) {
+  pt <- camiller::color_prev(pal) +
+    ggtitle(str_glue("Carto colors - {nm}"))
+  
+  print(pt)
+  
+  cat(nm, paste(pal, collapse = ", "), "\n")
+})
+```
+
+
